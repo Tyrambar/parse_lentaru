@@ -2,8 +2,10 @@ from bs4 import BeautifulSoup as Bs
 import pickle
 import requests
 from typing import NamedTuple
-import sys
 import argparse
+import sys
+import os
+
 
 from random import choice
 import re
@@ -18,7 +20,6 @@ ART_TAGS = {
     'news': 'item news b-tabloid__topic_news',
     'articles': 'item article'
 }
-ALL_ART = []
 
 
 class Art(NamedTuple):
@@ -52,45 +53,72 @@ def to_format_date(raw_date):
         else:
             format_date = ' '.join(date_spl[:-1] + [MONTHS[date_spl[-1]]] +
                                    [str(datetime.today().year)])
+
     return format_date
 
-def get_art_rubric(rubric_url, date_url):
+def get_art_attrs(rubric_url, date_url, dat_key):
+    global all_art
     req = requests.get(f'{MAIN_URL}/{rubric_url}/{date_url}', headers=USERAGENT)
     bs = Bs(req.text, "html.parser")
+    if rubric_url == 'all':
+        rubrics = (ART_TAGS['articles'], ART_TAGS['news'])
+    else:
+        rubrics = (ART_TAGS[rubric_url], )
+    count_art_per_date = 0
+    for rubric in rubrics:
+        all_raw_art = bs.find_all("div", class_=rubric)
+        count_art_per_date += len(all_raw_art)
+        if dat_key in all_art.keys():
+            if count_art_per_date == len(all_art[dat_key]):
+                print(ART_ADD_BEFORE)
+        for raw_art in all_raw_art:
+            date = raw_art.find("span", class_='g-date item__date').get_text()
+            title_art = raw_art.find("div", class_="titles").find('a')
+            art = Art(
+                rubric = rubric_url,
+                title = title_art.get_text(),
+                link = title_art.get('href'),
+                date = datetime.strptime(to_format_date(date), '%H:%M %d %m %Y')
+            )
+            if dat_key not in all_art.keys():
+                all_art[dat_key] = [art, ]
+            else:
+                if art not in all_art[dat_key]:
+                    all_art[dat_key].append(art)
+    all_art[dat_key].sort(key=lambda element: element.date)
+
+def main():
+    global all_art
+    path_file = namespace.file[1:-1]
+    rubric_url = namespace.rubric if namespace.rubric else 'all'
+    if os.path.exists('/'.join(path_file.split('/')[:-1])):
+        try:
+            with open(path_file, 'rb') as art_pkl:
+                all_art = pickle.load(art_pkl)
+        except: pass
+    else:
+        print(WRONG_DIRECTORY)
+        return
+
+    if namespace.date:
+        date_url = '/'.join(namespace.date.split('.'))
+        date_key = datetime.strptime(namespace.date, '%Y.%m.%d')
+        get_art_attrs(rubric_url, date_url, date_key)
+    else:
+        date_url = datetime.strftime(datetime.today(), '%Y/%m/')
+        for date_month in range(1, int(datetime.today().day)+1):
+            date_key = datetime.strptime(date_url + str(date_month), '%Y/%m/%d')
+            get_art_attrs(rubric_url, date_url + str(date_month), date_key)
+
     with open(path_file, 'wb') as art_pkl:
-        if rubric_url == 'all':
-            rubrics = (ART_TAGS['news'], ART_TAGS['articles'])
-        else:
-            rubrics = (ART_TAGS[rubric_url], )
-        for rubric in rubrics:
-            all_raw_art = bs.find_all("div", class_=rubric)
-            for raw_art in all_raw_art:
-                date = raw_art.find("span", class_='g-date item__date').get_text()
-                title_art = raw_art.find("div", class_="titles").find('a')
-                art = Art(
-                    rubric = rubric_url,
-                    title = title_art.get_text(),
-                    link = title_art.get('href'),
-                    date = datetime.strptime(to_format_date(date), '%H:%M %d %m %Y')
-                )
-                if date_url:
-                    ALL_ART.append(art)
-                else:
-                    pickle.dump(art, art_pkl)
-                print(art)
-        if date_url:
-            ALL_ART.sort(key= lambda element: element.date)
-            #for sort_art in ALL_ART:
-            #    pickle.dump(sort_art, art_pkl)
-            pickle.dump(tuple(ALL_ART), art_pkl)
+        pickle.dump(all_art, art_pkl)
+
+    return True
 
 
 if __name__ == '__main__':
     parser = createParser()
     namespace = parser.parse_args(sys.argv[1:])
-    print(namespace)
-    path_file = namespace.file[1:-1]
-    rubric_url = namespace.rubric if namespace.rubric else 'all'
-    print(rubric_url)
-    date_url = '/'.join(namespace.date.split('.'))
-    get_art_rubric(rubric_url, date_url)
+    all_art = {}
+    if main():
+        print(SUCCESS)

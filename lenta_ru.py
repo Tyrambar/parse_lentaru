@@ -13,7 +13,7 @@ from additional_const import *
 from datetime import datetime
 from calendar import Calendar
 
-
+# Most important constants
 MAIN_URL = 'https://lenta.ru'
 USERAGENT = {'User-agent': choice(USERAGENTS)}
 ART_TAGS = {
@@ -21,8 +21,9 @@ ART_TAGS = {
     'articles': 'item article'
 }
 
-
 class Art(NamedTuple):
+    """ Contains all attributes of articles
+    """
     rubric : str
     title : str
     link : str
@@ -40,6 +41,7 @@ def connected(url):
 
     return bs
 
+# For processing parametrs
 def createParser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', required=True)
@@ -64,6 +66,7 @@ def to_format_date(raw_date, dat_url):
 
     return format_date
 
+# Return raw text of article, without pictures, special texts and titles
 def get_art_text(full_url_art):
     all_raw_text = connected(full_url_art).find_all("p")
     text_art = ''
@@ -71,6 +74,7 @@ def get_art_text(full_url_art):
         text_art+=re.sub('\n', '', raw_art_text.get_text())+'\n'
     return text_art
 
+# Parse attributes of article by parametrs
 def get_art_attrs(rubric_url, date_url, dat_key):
     global all_art
     if rubric_url == 'all':
@@ -82,12 +86,18 @@ def get_art_attrs(rubric_url, date_url, dat_key):
         extense_url = f'{MAIN_URL}/{rubric}/{date_url}'
         all_raw_art = connected(extense_url).find_all("div", class_=ART_TAGS[rubric])
         count_art_per_date += len(all_raw_art)
+        # Check for existing the date in dictionary
         if dat_key in all_art.keys():
+            # If you didn't write date, programm will return articles without text of article
+            # Then, if you check for articles for existing date,
+            # you will get completely new list of articles by rubric with text for the date
             if namespace.date and choice(all_art[dat_key]).text == '':
                 all_art[dat_key].clear()
                 print(ART_DELETE_FOR_TEXT)
+            # If you have all articles by rubric, function return
             if count_art_per_date == len(all_art[dat_key]):
                 print(ART_ADD_BEFORE_ALL)
+                return
         for raw_art in all_raw_art:
             date = raw_art.find("span", class_='g-date item__date').get_text()
             title_art = raw_art.find("div", class_="titles").find('a')
@@ -103,6 +113,7 @@ def get_art_attrs(rubric_url, date_url, dat_key):
             if dat_key not in all_art.keys():
                 all_art[dat_key] = [art, ]
             else:
+                # Check art for existing in dictionary
                 if art not in all_art[dat_key]:
                     all_art[dat_key].append(art)
                 else:
@@ -112,6 +123,7 @@ def get_art_attrs(rubric_url, date_url, dat_key):
 def main():
     global all_art
     path_file = namespace.file[1:-1]
+    # If parametr of rubric is not given, programm processing both rubrics
     rubric_url = namespace.rubric if namespace.rubric else 'all'
 
     if os.path.exists('/'.join(path_file.split('/')[:-1])):
@@ -122,6 +134,7 @@ def main():
     else:
         print(WRONG_DIRECTORY)
         return
+    # If parametr of date is not given, programm will process every past day of current month
     if namespace.date:
         date_url = '/'.join(namespace.date.split('.'))
         date_key = datetime.strptime(namespace.date, '%Y.%m.%d').date()
@@ -133,7 +146,7 @@ def main():
             date_key = datetime.strptime(date_url + date_month_str, '%Y/%m/%d').date()
             print(SEARCHING_BY_DATE, date_key)
             get_art_attrs(rubric_url, date_url + date_month_str, date_key)
-
+    # If everything is okay, the dictionary dumps into storage
     with open(path_file, 'wb') as art_pkl:
         pickle.dump(all_art, art_pkl)
 

@@ -41,9 +41,11 @@ Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0; Trident/5.0; chromeframe/11.0
 """
 USERAGENTS = dry_useragents.split('\n')[1:]
 
+# For format raw data from site
 MONTHS = {'января': '1', 'февраля': '2', 'марта': '3', 'апреля': '4', 'мая': '5', 'июня': '6',
           'июля': '7', 'августа': '8', 'сентября': '9', 'октября': '10', 'ноября': '11', 'декабря': '12'}
 
+# Default messages from programm
 ART_ADD_BEFORE_ALL = 'All articles of this date were collected before that'
 ART_ADD_BEFORE = 'The article is already exist'
 ART_DELETE_FOR_TEXT = 'Articles by the date will be update with text of articles (using tags `p`)'

@@ -11,6 +11,7 @@ import re
 
 from additional_const import *
 from datetime import datetime
+from calendar import Calendar
 
 
 MAIN_URL = 'https://lenta.ru'
@@ -26,10 +27,18 @@ class Art(NamedTuple):
     title : str
     link : str
     date : datetime
+    text : str
 
     def __str__(self):
         return ('Новость: ' if self.rubric == 'news' else 'Статья: ') + \
                self.title + datetime.strftime(self.date, ' %d.%m.%Y')
+
+
+def connected(url):
+    req = requests.get(url, headers=USERAGENT)
+    bs = Bs(req.text, "html.parser")
+
+    return bs
 
 def createParser():
     parser = argparse.ArgumentParser()
@@ -55,6 +64,13 @@ def to_format_date(raw_date, dat_url):
 
     return format_date
 
+def get_art_text(full_url_art):
+    all_raw_text = connected(full_url_art).find_all("p")
+    text_art = ''
+    for raw_art_text in all_raw_text:
+        text_art+=re.sub('\n', '', raw_art_text.get_text())+'\n'
+    return text_art
+
 def get_art_attrs(rubric_url, date_url, dat_key):
     global all_art
     if rubric_url == 'all':
@@ -62,22 +78,27 @@ def get_art_attrs(rubric_url, date_url, dat_key):
     else:
         rubrics = (rubric_url, )
     for rubric in rubrics:
-        req = requests.get(f'{MAIN_URL}/{rubric}/{date_url}', headers=USERAGENT)
-        bs = Bs(req.text, "html.parser")
         count_art_per_date = 0
-        all_raw_art = bs.find_all("div", class_=ART_TAGS[rubric])
+        extense_url = f'{MAIN_URL}/{rubric}/{date_url}'
+        all_raw_art = connected(extense_url).find_all("div", class_=ART_TAGS[rubric])
         count_art_per_date += len(all_raw_art)
         if dat_key in all_art.keys():
+            if namespace.date and choice(all_art[dat_key]).text == '':
+                all_art[dat_key].clear()
+                print(ART_DELETE_FOR_TEXT)
             if count_art_per_date == len(all_art[dat_key]):
                 print(ART_ADD_BEFORE_ALL)
         for raw_art in all_raw_art:
             date = raw_art.find("span", class_='g-date item__date').get_text()
             title_art = raw_art.find("div", class_="titles").find('a')
+            url_art = title_art.get('href')
+            text_art = get_art_text(MAIN_URL+url_art) if namespace.date else ''
             art = Art(
                 rubric = rubric,
                 title = title_art.get_text(),
-                link = title_art.get('href'),
-                date = datetime.strptime(to_format_date(date, date_url), '%H:%M %d %m %Y')
+                link = url_art,
+                date = datetime.strptime(to_format_date(date, date_url), '%H:%M %d %m %Y'),
+                text = text_art
             )
             if dat_key not in all_art.keys():
                 all_art[dat_key] = [art, ]
@@ -92,7 +113,6 @@ def main():
     global all_art
     path_file = namespace.file[1:-1]
     rubric_url = namespace.rubric if namespace.rubric else 'all'
-    print(namespace)
 
     if os.path.exists('/'.join(path_file.split('/')[:-1])):
         try:
@@ -102,7 +122,6 @@ def main():
     else:
         print(WRONG_DIRECTORY)
         return
-
     if namespace.date:
         date_url = '/'.join(namespace.date.split('.'))
         date_key = datetime.strptime(namespace.date, '%Y.%m.%d').date()

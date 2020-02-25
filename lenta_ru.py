@@ -6,7 +6,6 @@ import argparse
 import sys
 import os
 
-
 from random import choice
 import re
 
@@ -58,25 +57,19 @@ def to_format_date(raw_date, dat_url):
 
 def get_art_attrs(rubric_url, date_url, dat_key):
     global all_art
-    print('begin get', date_url)
-    req = requests.get(f'{MAIN_URL}/{rubric_url}/{date_url}', headers=USERAGENT)
-    print(req.text)
-    if 'div' in req.text:
-        print('diiiv')
-    bs = Bs(req.text, "html.parser")
     if rubric_url == 'all':
         rubrics = ('articles', 'news')
     else:
         rubrics = (rubric_url, )
-    count_art_per_date = 0
     for rubric in rubrics:
-        print('circle', rubric)
+        req = requests.get(f'{MAIN_URL}/{rubric}/{date_url}', headers=USERAGENT)
+        bs = Bs(req.text, "html.parser")
+        count_art_per_date = 0
         all_raw_art = bs.find_all("div", class_=ART_TAGS[rubric])
-        print(ART_TAGS[rubric], all_raw_art)
         count_art_per_date += len(all_raw_art)
         if dat_key in all_art.keys():
             if count_art_per_date == len(all_art[dat_key]):
-                print(ART_ADD_BEFORE)
+                print(ART_ADD_BEFORE_ALL)
         for raw_art in all_raw_art:
             date = raw_art.find("span", class_='g-date item__date').get_text()
             title_art = raw_art.find("div", class_="titles").find('a')
@@ -86,19 +79,21 @@ def get_art_attrs(rubric_url, date_url, dat_key):
                 link = title_art.get('href'),
                 date = datetime.strptime(to_format_date(date, date_url), '%H:%M %d %m %Y')
             )
-            print('added art')
             if dat_key not in all_art.keys():
                 all_art[dat_key] = [art, ]
             else:
                 if art not in all_art[dat_key]:
                     all_art[dat_key].append(art)
+                else:
+                    print(ART_ADD_BEFORE)
     all_art[dat_key].sort(key=lambda element: element.date)
 
 def main():
     global all_art
     path_file = namespace.file[1:-1]
     rubric_url = namespace.rubric if namespace.rubric else 'all'
-    print('in main', rubric_url)
+    print(namespace)
+
     if os.path.exists('/'.join(path_file.split('/')[:-1])):
         try:
             with open(path_file, 'rb') as art_pkl:
@@ -111,15 +106,13 @@ def main():
     if namespace.date:
         date_url = '/'.join(namespace.date.split('.'))
         date_key = datetime.strptime(namespace.date, '%Y.%m.%d').date()
-        print(date_key)
         get_art_attrs(rubric_url, date_url, date_key)
     else:
         date_url = datetime.strftime(datetime.today(), '%Y/%m/')
-        print(date_url)
         for date_month in range(1, int(datetime.today().day)+1):
             date_month_str = f'{"0" if date_month < 10 else ""}{str(date_month)}'
             date_key = datetime.strptime(date_url + date_month_str, '%Y/%m/%d').date()
-            print('in date_month', date_key)
+            print(SEARCHING_BY_DATE, date_key)
             get_art_attrs(rubric_url, date_url + date_month_str, date_key)
 
     with open(path_file, 'wb') as art_pkl:

@@ -153,7 +153,7 @@ def main():
         return
 		
     # If parametr of date is not given, programm will process
-	# every past day of current month
+    # every past day of current month
     if namespace.date:
         date_url = re.sub('.', '/', namespace.date)
         date_key = datetime.strptime(namespace.date, '%Y.%m.%d').date()

@@ -121,7 +121,7 @@ def get_art_attrs(rubric_url, date_url, dat_key):
                 title=title_art.get_text(),
                 link=url_art,
                 date=datetime.strptime(to_format_date(date, date_url),
-                                         '%H:%M %d %m %Y'),
+                                       '%H:%M %d %m %Y'),
                 text=text_art				
             )
             if dat_key not in all_art.keys():

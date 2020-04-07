@@ -60,7 +60,8 @@ def to_format_date(raw_date, dat_url):
     date_spl = re.sub('—', '', raw_date).split()
     if date_spl[-1].lower() == 'сегодня':
         format_date = ' '.join(date_spl[:-1]) + \
-                      datetime.strftime(datetime.today(), ' %d %m %Y')
+                               datetime.strftime(datetime.today(), 
+                                                 ' %d %m %Y')
     else:
         if dat_url[:4] != '2020':
             format_date = ' '.join(date_spl[:-2] + 
@@ -99,7 +100,7 @@ def get_art_attrs(rubric_url, date_url, dat_key):
         # Check for existing the date in dictionary
         if dat_key in all_art.keys():
             # If you didn't write date, programm will return articles
-			# without text of article. Then, if you check
+            # without text of article. Then, if you check
             # for articles for existing date, you will get completely 
             # new list of articles by rubric with text for the date
             if namespace.date and choice(all_art[dat_key]).text == '':

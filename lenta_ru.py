@@ -33,8 +33,9 @@ class Art(NamedTuple):
     text : str
 
     def __str__(self):
-        return ('Новость: ' if self.rubric == 'news' else 'Статья: ')+\
-               self.title+datetime.strftime(self.date, ' %d.%m.%Y')
+	    txt = ('Новость: ' if self.rubric == 'news' else 'Статья: ')
+               + self.title + datetime.strftime(self.date, ' %d.%m.%Y')
+        return txt
 
 
 def connected(url):
@@ -59,16 +60,16 @@ def to_format_date(raw_date, dat_url):
         raw_date = raw_date[:5] + ' ' + raw_date[5:]
     date_spl = re.sub('—', '', raw_date).split()
     if date_spl[-1].lower() == 'сегодня':
-        format_date = ' '.join(date_spl[:-1]) + \
-                               datetime.strftime(datetime.today(), 
-                                                 ' %d %m %Y')
+        format_date = ' '.join(date_spl[:-1])
+                               + datetime.strftime(datetime.today(), 
+                                                   ' %d %m %Y')
     else:
         if dat_url[:4] != '2020':
-            format_date = ' '.join(date_spl[:-2] + 
-                                   [MONTHS[date_spl[-2]]] + [date_spl[-1]])
+            format_date = ' '.join(date_spl[:-2]
+                                   +[MONTHS[date_spl[-2]]]+[date_spl[-1]])
         else:
-            format_date = ' '.join(date_spl[:-1] + [MONTHS[date_spl[-1]]] +
-                                   [str(datetime.today().year)])
+            format_date = ' '.join(date_spl[:-1]+[MONTHS[date_spl[-1]]]
+                                   +[str(datetime.today().year)])
 
     return format_date
 
@@ -78,7 +79,7 @@ def get_art_text(full_url_art):
     all_raw_text = connected(full_url_art).find_all("p")
     text_art = ''
     for raw_art_text in all_raw_text:
-        text_art += re.sub('\n', '', raw_art_text.get_text())+'\n'
+        text_art += re.sub('\n', '', raw_art_text.get_text()) + '\n'
     return text_art
 
 	
@@ -94,7 +95,7 @@ def get_art_attrs(rubric_url, date_url, dat_key):
         count_art_per_date = 0
         extense_url = f'{MAIN_URL}/{rubric}/{date_url}'
         all_raw_art = connected(extense_url)
-                      .find_all("div", class_=ART_TAGS[rubric])
+                .find_all("div", class_=ART_TAGS[rubric])
         count_art_per_date += len(all_raw_art)
 		
         # Check for existing the date in dictionary
@@ -113,7 +114,7 @@ def get_art_attrs(rubric_url, date_url, dat_key):
 				
         for raw_art in all_raw_art:
             date = raw_art.find("span", class_='g-date item__date')
-                                .get_text()
+                    .get_text()
             title_art = raw_art.find("div", class_="titles").find('a')
             url_art = title_art.get('href')
             text_art = get_art_text(MAIN_URL+url_art) if namespace.date else ''
@@ -125,6 +126,7 @@ def get_art_attrs(rubric_url, date_url, dat_key):
                                        '%H:%M %d %m %Y'),
                 text=text_art				
             )
+			
             if dat_key not in all_art.keys():
                 all_art[dat_key] = [art, ]
             else:
@@ -133,6 +135,7 @@ def get_art_attrs(rubric_url, date_url, dat_key):
                     all_art[dat_key].append(art)
                 else:
                     print(ART_ADD_BEFORE)
+					
     all_art[dat_key].sort(key=lambda element: element.date)
 
 
@@ -161,11 +164,11 @@ def main():
     else:
         date_url = datetime.strftime(datetime.today(), '%Y/%m/')
         for date_month in range(1, int(datetime.today().day)+1):
-            date_month_str = f'{"0" if date_month < 10 else ""}'\
-                              '{str(date_month)}'
-            date_key = datetime.strptime(date_url + date_month_str,
+            date_month_str = f'{"0" if date_month < 10 else ""}' \
+                             f'{str(date_month)}'
+            date_key = datetime.strptime(date_url+date_month_str,
                                          '%Y/%m/%d').date()
-            get_art_attrs(rubric_url, date_url + date_month_str, date_key)
+            get_art_attrs(rubric_url, date_url+date_month_str, date_key)
 			
     # If everything is okay, the dictionary dumps into storage
     with open(path_file, 'wb') as art_pkl:

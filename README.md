@@ -15,4 +15,4 @@
 
 ***Пример запроса:***
 
-**python lenta_ru.py --file=”/home/ubuntu/rbc/nicetry/parse_lentaru/lenta_ru.pkl” --rubric=news --date=2020.01.28**
+**python lenta_ru.py --file=”/home/ubuntu/parse_lentaru/lenta_ru.pkl” --rubric=news --date=2020.01.28**

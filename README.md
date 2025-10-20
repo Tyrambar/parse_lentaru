@@ -5,6 +5,7 @@ Recommended: use a virtual environment.
 
 Install dependencies : **pip install -r req.txt**
 
+
 **What it does**
 
 This script parses articles (by using BeautifulSoup) from lenta.ru filtered by date and/or section (called “rubric” on Lenta).
@@ -26,8 +27,10 @@ b) *With --date*: collects articles for that date and rubric, including article 
 
 **python lenta_ru.py --file=”/home/ubuntu/parse_lentaru/lenta_ru.pkl” --rubric=news --date=2020.01.28**
 
+_
 
 **RU: Старая тестовая задача для одного из интервью в 2020 году в Москве**
+
 Рекомендуется перед выполнением программы загрузить отдельное виртуальное окружение.
 
 Программа выполнена на Python 3.7.5

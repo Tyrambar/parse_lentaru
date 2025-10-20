@@ -48,9 +48,9 @@ MONTHS = {'января': '1', 'февраля': '2', 'марта': '3', 'апр
 
 		  
 # Default messages from programm
-ART_ADD_BEFORE_ALL = 'All articles of this date were collected before that'
-ART_ADD_BEFORE = 'The article is already exist'
-ART_DELETE_FOR_TEXT = 'Articles by the date will be update with text of ' \
+ART_ADD_BEFORE_ALL = 'All articles for this date were collected before that'
+ART_ADD_BEFORE = 'The article already exists'
+ART_DELETE_FOR_TEXT = 'Articles sorted by the date will be updated with text of ' \
 	'articles (using tags `p`)'
 SEARCHING_BY_DATE = 'Searching for articles by date: '
 WRONG_DIRECTORY = 'Such directory doesn`t exist. Check it'

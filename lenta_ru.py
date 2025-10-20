@@ -45,7 +45,7 @@ def connected(url):
     return bs
 
 	
-# For processing parametrs
+# For processing parameters
 def createParser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', required=True)
@@ -83,7 +83,7 @@ def get_art_text(full_url_art):
     return text_art
 
 	
-# Parse attributes of article by parametrs
+# Parse attributes of article by parameters
 def get_art_attrs(rubric_url, date_url, dat_key):
     global all_art
     if rubric_url == 'all':
@@ -100,14 +100,14 @@ def get_art_attrs(rubric_url, date_url, dat_key):
 		
         # Check for existing the date in dictionary
         if dat_key in all_art.keys():
-            # If you didn't write date, programm will return articles
-            # without text of article. Then, if you check
-            # for articles for existing date, you will get completely 
-            # new list of articles by rubric with text for the date
+            # If you haven't written a date, the program will return articles
+            # without a text of article. Then, if you check
+            # articles for an existing date, you will get a completely 
+            # new list of articles sorted by the rubric with a text for the date
             if namespace.date and choice(all_art[dat_key]).text == '':
                 all_art[dat_key].clear()
                 print(ART_DELETE_FOR_TEXT)
-            # If you have all articles by rubric, function return
+            # If you have all articles by the rubric, function will return
             if count_art_per_date == len(all_art[dat_key]):
                 print(ART_ADD_BEFORE_ALL)
                 return
@@ -141,9 +141,9 @@ def get_art_attrs(rubric_url, date_url, dat_key):
 
 def main():
     global all_art
-    path_file = namespace.file[1:-1]
-    # If parametr of rubric is not given,
-	# programm processing both rubrics
+    path_file = namespace.file[1:]
+    # If the parameter of the rubric is not given,
+	# the program will process both rubrics
     rubric_url = namespace.rubric if namespace.rubric else 'all'
 
     if os.path.exists('/'.join(path_file.split('/')[:-1])):
@@ -155,8 +155,8 @@ def main():
         print(WRONG_DIRECTORY)
         return
 		
-    # If parametr of date is not given, programm will process
-    # every past day of current month
+    # If the parameter of date is not given, the program will process
+    # every past day of a current month
     if namespace.date:
         date_url = re.sub('.', '/', namespace.date)
         date_key = datetime.strptime(namespace.date, '%Y.%m.%d').date()
